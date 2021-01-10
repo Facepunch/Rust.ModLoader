@@ -2,7 +2,7 @@
 using Harmony;
 using UnityEngine;
 
-namespace Rust.ModLoader.Hooks
+namespace Rust.ModLoader.Hooks.Server
 {
     [HarmonyPatch(typeof(ServerMgr), "Update")]
     public class ServerUpdateHook
@@ -13,7 +13,7 @@ namespace Rust.ModLoader.Hooks
             try
             {
                 ModLoader.Scripts?.Update();
-                ModLoader.Scripts?.Invoke("Update");
+                ModLoader.Scripts?.Broadcast("Update");
             }
             catch (Exception e)
             {

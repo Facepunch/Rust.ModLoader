@@ -19,7 +19,7 @@ namespace Rust.ModLoader.Scripting
 
             var parameterTypes = signature.GetParameters().Select(p => p.ParameterType).ToArray();
             var method = objectType.GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, parameterTypes, null);
-            if (method == null || method.DeclaringType == typeof(RustScript))
+            if (method == null || method.ReturnType != signature.ReturnType || method.DeclaringType == typeof(RustScript))
             {
                 return null;
             }

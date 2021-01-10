@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Rust.ModLoader
 {
-    internal static class ModLoader
+    public static class ModLoader
     {
         public static ScriptManager Scripts { get; }
 

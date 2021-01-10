@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Rust.ModLoader.Scripting;
-using Debug = UnityEngine.Debug;
+using System.Reflection;
 
 namespace Rust.ModLoader
 {
@@ -13,6 +12,7 @@ namespace Rust.ModLoader
         private const string ScriptFilter = "*" + ScriptExtension;
         private const double UpdateFrequency = 1.0 / 1; // per sec
         private const double ChangeCooldown = 1; // seconds
+        private static readonly char[] NameTrimChars = { '_' };
 
         private readonly object _sync;
         private readonly string _sourcePath;
@@ -57,17 +57,23 @@ namespace Rust.ModLoader
         internal void Update()
         {
             if (_timeSinceUpdate.Elapsed.TotalSeconds < UpdateFrequency)
+            {
                 return;
+            }
 
             _timeSinceUpdate.Restart();
 
             lock (_sync)
             {
                 if (_timeSinceChange.Elapsed.TotalSeconds < ChangeCooldown)
+                {
                     return;
+                }
 
                 if (_pendingRefresh.Count == 0)
+                {
                     return;
+                }
 
                 // TODO: this will be a lot more involved once it supports dependencies between scripts
                 foreach (var item in _pendingRefresh)
@@ -105,7 +111,7 @@ namespace Rust.ModLoader
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                script.ReportError("Update", e);
             }
         }
 
@@ -113,7 +119,9 @@ namespace Rust.ModLoader
         {
             var name = Path.GetFileNameWithoutExtension(scriptPath);
             if (string.IsNullOrWhiteSpace(name))
+            {
                 return;
+            }
 
             lock (_sync)
             {
@@ -130,44 +138,74 @@ namespace Rust.ModLoader
             }
         }
 
-        public void Invoke(string methodName)
+        internal void PopulateScriptReferences(RustScript rustScript)
+        {
+            var type = rustScript.GetType();
+            
+            var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var field in fields)
+            {
+                if (field.FieldType != typeof(IScriptReference) || field.IsSpecialName)
+                {
+                    continue;
+                }
+
+                var scriptName = field.Name.Trim(NameTrimChars);
+                if (!_scripts.TryGetValue(scriptName, out var script))
+                {
+                    continue;
+                }
+
+                field.SetValue(rustScript, script);
+            }
+
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            foreach (var property in properties)
+            {
+                if (property.PropertyType != typeof(IScriptReference) || !property.CanWrite)
+                {
+                    continue;
+                }
+                
+                var scriptName = property.Name.Trim(NameTrimChars);
+                if (!_scripts.TryGetValue(scriptName, out var script))
+                {
+                    continue;
+                }
+
+                property.SetValue(rustScript, script);
+            }
+        }
+
+        public void Broadcast(string methodName)
         {
             lock (_sync)
             {
                 foreach (var script in _scripts.Values)
                 {
-                    if (script.Instance != null)
-                    {
-                        ScriptInvoker.Invoke(script.Instance, methodName);
-                    }
+                    script.InvokeProcedure(methodName);
                 }
             }
         }
 
-        public void Invoke<T0>(string methodName, T0 arg0)
+        public void Broadcast<T0>(string methodName, T0 arg0)
         {
             lock (_sync)
             {
                 foreach (var script in _scripts.Values)
                 {
-                    if (script.Instance != null)
-                    {
-                        ScriptInvoker<T0>.Invoke(script.Instance, methodName, arg0);
-                    }
+                    script.InvokeProcedure(methodName, arg0);
                 }
             }
         }
 
-        public void Invoke<T0, T1>(string methodName, T0 arg0, T1 arg1)
+        public void Broadcast<T0, T1>(string methodName, T0 arg0, T1 arg1)
         {
             lock (_sync)
             {
                 foreach (var script in _scripts.Values)
                 {
-                    if (script.Instance != null)
-                    {
-                        ScriptInvoker<T0, T1>.Invoke(script.Instance, methodName, arg0, arg1);
-                    }
+                   script.InvokeProcedure(methodName, arg0, arg1);
                 }
             }
         }

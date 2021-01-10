@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Rust.ModLoader
 {
-    internal class Script : IEquatable<Script>, IDisposable
+    internal partial class Script : IEquatable<Script>, IDisposable
     {
         public ScriptManager Manager { get; }
         public string Name { get; }
@@ -30,7 +30,7 @@ namespace Rust.ModLoader
             }
             catch (Exception e)
             {
-                Debug.LogError($"");
+                Debug.LogError($"{Instance?.GetType().FullName}::Dispose threw: {e}");
             }
 
             Instance = null;
@@ -85,7 +85,7 @@ namespace Rust.ModLoader
             var type = assembly.GetType(Name);
             if (type == null)
             {
-                throw new ScriptLoadException(Name, $"Unable to find class '{Name}' in the compiled script");
+                throw new ScriptLoadException(Name, $"Unable to find class '{Name}' in the compiled script.");
             }
 
             object instance;
@@ -96,12 +96,12 @@ namespace Rust.ModLoader
             }
             catch (Exception e)
             {
-                throw new ScriptLoadException(Name, "Exception thrown in script constructor", e);
+                throw new ScriptLoadException(Name, $"Exception thrown in script '{Name}' constructor.", e);
             }
                 
             if (!(instance is RustScript scriptInstance))
             {
-                throw new ScriptLoadException(Name, "Script class must derive from RustScript");
+                throw new ScriptLoadException(Name, $"Script class ({type.FullName}) must derive from RustScript.");
             }
 
             scriptInstance.Manager = Manager;
@@ -110,6 +110,22 @@ namespace Rust.ModLoader
             Instance = scriptInstance;
             Path = path;
             SourceCode = code;
+
+            Manager.PopulateScriptReferences(Instance);
+
+            try
+            {
+                Instance.Initialize();
+            }
+            catch (Exception e)
+            {
+                ReportError("Initialize", e);
+            }
+        }
+
+        internal void ReportError(string context, Exception e)
+        {
+            Debug.LogError($"Script '{Name}' threw in {context}: {e}");
         }
 
         #region IEquatable
