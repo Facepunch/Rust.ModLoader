@@ -138,7 +138,7 @@ namespace Rust.ModLoader
             }
         }
 
-        internal void PopulateScriptReferences(RustScript rustScript)
+        internal IEnumerable<string> PopulateScriptReferences(RustScript rustScript)
         {
             var type = rustScript.GetType();
             
@@ -157,6 +157,7 @@ namespace Rust.ModLoader
                 }
 
                 field.SetValue(rustScript, script);
+                yield return script.Name;
             }
 
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -174,6 +175,7 @@ namespace Rust.ModLoader
                 }
 
                 property.SetValue(rustScript, script);
+                yield return script.Name;
             }
         }
 

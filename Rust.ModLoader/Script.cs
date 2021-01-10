@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Rust.ModLoader.Exceptions;
 using Rust.ModLoader.Scripting;
@@ -14,12 +16,14 @@ namespace Rust.ModLoader
         public string Path { get; private set; }
         public string SourceCode { get; private set; }
         public Assembly Assembly { get; private set; }
-        public RustScript Instance { get; private set; } 
+        public RustScript Instance { get; private set; }
+        public HashSet<string> SoftDependencies { get; }
 
         public Script(ScriptManager manager, string name)
         {
             Manager = manager ?? throw new ArgumentNullException(nameof(manager));
             Name = name ?? throw new ArgumentNullException(nameof(name));
+            SoftDependencies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void Dispose()
@@ -111,7 +115,9 @@ namespace Rust.ModLoader
             Path = path;
             SourceCode = code;
 
-            Manager.PopulateScriptReferences(Instance);
+            SoftDependencies.Clear();
+            var allSoftReferences = Manager.PopulateScriptReferences(Instance).ToList();
+            SoftDependencies.UnionWith(allSoftReferences);
 
             try
             {
