@@ -106,7 +106,7 @@
     <Compile Include="Exceptions\ScriptLoadException.cs" />
     <Compile Include="Hooks\Server\ServerUpdateHook.cs" />
     <Compile Include="Public\IScriptReference.cs" />
-    <Compile Include="Public\ModLoader.cs" />
+    <Compile Include="ModLoader.cs" />
     <Compile Include="Script.Invokers.cs" />
     <Compile Include="Public\RustScript.cs" />
     <Compile Include="RefreshItem.cs" />
