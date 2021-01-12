@@ -93,6 +93,7 @@
   <ItemGroup>
     <Compile Include="Exceptions\ScriptInvocationException.cs" />
     <Compile Include="Exceptions\ScriptLoadException.cs" />
+    <Compile Include="Hooks\Server\ServerPlayerConnectedHook.cs" />
     <Compile Include="Hooks\Server\ServerUpdateHook.cs" />
     <Compile Include="IScriptReference.cs" />
     <Compile Include="ModLoader.cs" />
