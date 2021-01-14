@@ -1,11 +1,17 @@
-﻿using Rust.ModLoader.Scripting;
-using System;
+﻿using System;
+using Rust.ModLoader.Scripting;
 using Rust.ModLoader.Exceptions;
 
 namespace Rust.ModLoader
 {
     internal partial class Script : IScriptReference
     {
+        public bool IsLoaded => Instance != null;
+
+        public Type ReflectionType => Instance?.GetType();
+
+        public object ReflectionInstance => Instance;
+
         public void InvokeProcedure(string methodName)
         {
             if (Instance == null)

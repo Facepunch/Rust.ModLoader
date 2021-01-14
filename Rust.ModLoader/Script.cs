@@ -28,6 +28,8 @@ namespace Rust.ModLoader
 
         public void Dispose()
         {
+            Manager.ScriptUnloading(this);
+
             try
             {
                 Instance?.Dispose();
@@ -39,6 +41,8 @@ namespace Rust.ModLoader
 
             Instance = null;
             Assembly = null;
+
+            Manager.ScriptUnloaded(this);
         }
 
         internal void Update(string path)
@@ -86,6 +90,8 @@ namespace Rust.ModLoader
 
         private void Initialize(string path, string code, Assembly assembly)
         {
+            Dispose();
+
             var type = assembly.GetType(Name);
             if (type == null)
             {
@@ -119,6 +125,8 @@ namespace Rust.ModLoader
             var allSoftReferences = Manager.PopulateScriptReferences(Instance).ToList();
             SoftDependencies.UnionWith(allSoftReferences);
 
+            Manager.ScriptLoading(this);
+
             try
             {
                 Instance.Initialize();
@@ -127,6 +135,8 @@ namespace Rust.ModLoader
             {
                 ReportError("Initialize", e);
             }
+
+            Manager.ScriptLoaded(this);
         }
 
         internal void ReportError(string context, Exception e)

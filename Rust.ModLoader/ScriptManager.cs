@@ -22,6 +22,26 @@ namespace Rust.ModLoader
         private readonly Stopwatch _timeSinceChange;
         private readonly Stopwatch _timeSinceUpdate;
 
+        /// <summary>
+        /// Called after instantiating the script but before Initialize is called. Use this to set up the instance with auto-populated field values.
+        /// </summary>
+        public event Action<IScriptReference> OnScriptLoading;
+
+        /// <summary>
+        /// Called after Initialize finishes for a script.
+        /// </summary>
+        public event Action<IScriptReference> OnScriptLoaded;
+
+        /// <summary>
+        /// Called before Dispose is called for a script.
+        /// </summary>
+        public event Action<IScriptReference> OnScriptUnloading;
+
+        /// <summary>
+        /// Called after Dispose finishes for a script.
+        /// </summary>
+        public event Action<IScriptReference> OnScriptUnloaded;
+
         public ScriptManager(string sourcePath)
         {
             _sync = new object();
@@ -136,6 +156,28 @@ namespace Rust.ModLoader
             {
                 Refresh(scriptPath);
             }
+        }
+
+        internal void ScriptLoading(IScriptReference script)
+        {
+            OnScriptLoading?.Invoke(script);
+        }
+
+        internal void ScriptLoaded(IScriptReference script)
+        {
+            OnScriptLoaded?.Invoke(script);
+            Broadcast("OnScriptLoaded", script);
+        }
+
+        internal void ScriptUnloading(IScriptReference script)
+        {
+            OnScriptUnloading?.Invoke(script);
+        }
+
+        internal void ScriptUnloaded(IScriptReference script)
+        {
+            OnScriptUnloaded?.Invoke(script);
+            Broadcast("OnScriptUnloaded", script);
         }
 
         internal IEnumerable<string> PopulateScriptReferences(RustScript rustScript)
