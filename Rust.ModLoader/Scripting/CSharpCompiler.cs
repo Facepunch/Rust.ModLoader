@@ -49,7 +49,7 @@ namespace Rust.ModLoader.Scripting
         private static SyntaxTree ParseCode(string code)
         {
             var sourceText = SourceText.From(code);
-            var options = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest);
+            var options = CSharpParseOptions.Default.WithLanguageVersion( LanguageVersion.Latest );
             return CSharpSyntaxTree.ParseText(sourceText, options);
         }
 

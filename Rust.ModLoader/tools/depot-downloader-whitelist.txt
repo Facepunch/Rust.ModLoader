@@ -1,0 +1,1 @@
+﻿regex:.RustDedicated_Data\\Managed\\*\.dll
